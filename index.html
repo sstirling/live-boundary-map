@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+        <!-- Don't forget to change this. -->
+        <title>Open Election Map</title>
+        <meta name="description" content="Results from the DC 2014 General Election">
+
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <link href='http://fonts.googleapis.com/css?family=Cabin:400,700' rel='stylesheet' type='text/css'>
+
+        <link rel="stylesheet" href="css/normalize.css">
+        <link rel="stylesheet" href="js/leaflet-master/leaflet.css">
+        <link rel="stylesheet" href="css/main.css">
+        <script src="js/vendor/modernizr-2.6.2.min.js"></script>
+    </head>
+    <body>
+
+        <!-- Begin custom header. -->
+        <header>
+            <div class="wrapper">
+                <!-- <img class="logo" src="img/logo.png" alt="" /> -->
+                <div class="title">
+                    <h1>Open Election Map</h1>
+                    <h2>DC 2014 General Election</h2>
+                </div>
+                <div class="credits">
+                    <a href="http://wamu.org"><img src="img/wamu.png" alt="WAMU 88.5 American University Radio" width="156" height="50" class="wamu" /></a>
+                    <a href="http://codefordc.org"><img src="img/c4dc.png" alt="Code for DC" width="106" height="60" class="codefordc" /></a>
+                </div>
+            </div>
+        </header>
+        <!-- End custom header. -->
+
+        <div id="main">
+            <section id="top">
+                <navigation></navigation>
+                <div id="status">
+                    <div class="progress-bar"><span class="horizontal-bar"></span></div>
+                    <span class="label"></span>
+                </div>
+            </section>
+            <section id="candidates">
+                <div class="table-header">
+                    <div class="name">Candidate</div>
+                    <div class="party">Party</div>
+                    <div class="votes">Votes</div>
+                    <div class="percentage">%</div>
+                </div>
+                <ul></ul>
+                <a class="action">Show All +</a>
+            </section>
+            <section id="exhibit">
+                <div id="hover-label">
+                    <div class="vtd-name"></div>
+                    <div class="vtd-description"></div>
+                </div>
+                <div id="map-wrapper"><div id="map">&nbsp;</div></div>
+                <div class="options">
+                    <div class="panel legend">
+                        <h4>Legend</h4>
+                        <div id="legend"></div>
+                    </div>
+                    <div class="panel view">
+                        <h4>View</h4>
+                        <ul>
+                            <li><a class="box selected" data-view="winner">Precinct Winner</a></li>
+                            <li><a class="box" data-view="margin">Vote Margin</a></li>
+                        </ul>
+                    </div>
+                    <div class="panel filter">
+                        <h4>Filter</h4>
+                        <div class="filter-controls" style="display: none;">
+                            <p class="description"></p>
+                            <div class="slider">
+                                <input type="range" min="0" max="100" step="1" value="50" />
+                                <span class="label"></span>
+                            </div>
+                            <a id="reverse-direction" class="action">Reverse Direction</a>
+                            <span class="divider">&nbsp;&nbsp;|&nbsp;&nbsp;</span>
+                            <a id="clear-filter" class="action">Clear Filter</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Begin custom footer. -->
+            <footer>
+                <p><a href="https://docs.google.com/spreadsheets/d/1xZXetat3Up0qHRJfRs8jQIlTJgRT9zzuAEAlyZ-p4RU/edit?usp=sharing">Data Download</a> | <a href="https://github.com/cmgiven/open-election-map">Fork Us on Github</a></p>
+                <p>Data provided by the <a href="https://www.dcboee.org">DC Board of Elections</a> and by <a href="http://neighborhoodinfodc.org/comparisontables/comparisontables.html">Neighborhood Info DC</a>, a project of the <a href="http://www.urban.org/">Urban Institute</a> and the <a href="http://www.lisc.org/washingtondc/">Washington DC Local Initiatives Support Corporation</a>.</p>
+            </footer>
+            <!-- End custom footer. -->
+
+        </div>
+
+        <!-- Replacement for the header credits div on mobile. -->
+        <div class="mobile credits">
+            <a href="http://wamu.org"><img src="img/wamu.png" alt="WAMU 88.5 American University Radio" width="156" height="50" class="wamu" /></a>
+            <a href="http://codefordc.org"><img src="img/c4dc.png" alt="Code for DC" width="106" height="60" class="codefordc" /></a>
+        </div>
+
+        <script type="text/template" id="candidate-template">
+            <% function commaSeparateNumber(val) {
+                while (/(\d+)(\d{3})/.test(val.toString())) {
+                    val = val.toString().replace(/(\d+)(\d{3})/, '$1' + ',' + '$2');
+                }
+                return val;
+            } %>
+            <li class="candidate <%= other ? 'other\" style=\"display: none' : '' %>">
+                <div class="color" style="background:<%= color ? color : '#AAA' %>"></div>
+                <div class="headshot"><img src="<%= photo ? photo : 'img/anonymous.gif' %>" alt="" width="44" height="44" /></div>
+                <div class="info">
+                    <div class="name"><%= first_name ? first_name + ' ' : '' %><strong><%= last_name %></strong></div>
+                    <div class="party"><%= party %></div>
+                    <div class="votes"><%= commaSeparateNumber(tally) %></div>
+                    <div class="percentage">
+                        <span class="horizontal-bar" style="width: <%= (tally ? (tally / maxVotes * 100) : 0) + '%' %>; background:<%= color ? color : '#AAA' %>"></span>&nbsp;<span class="value"><%= (tally ? (tally / totalVotes * 100) : 0).toFixed(1) + '%' %></span>
+                    </div>
+                </div>
+            </li>
+        </script>
+
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+        <script>window.jQuery || document.write('<script src="js/vendor/jquery-1.10.2.min.js"><\/script>')</script>
+        <script src="js/lodash.min.js"></script>
+        <script src="js/jquery.csv-0.71.min.js"></script>
+        <script src="js/topojson.v1.min.js"></script>
+
+        <!-- Note that this is a customized version of Leaflet to enable fractional zooming. -->
+        <script src="js/leaflet-master/leaflet.js"></script>
+
+        <script src="js/main.js"></script>
+
+        <!-- Change UA-56383922-1 to your GA tracking code. -->
+        <script>
+            (function(b,o,i,l,e,r){b.GoogleAnalyticsObject=l;b[l]||(b[l]=
+            function(){(b[l].q=b[l].q||[]).push(arguments)});b[l].l=+new Date;
+            e=o.createElement(i);r=o.getElementsByTagName(i)[0];
+            e.src='//www.google-analytics.com/analytics.js';
+            r.parentNode.insertBefore(e,r)}(window,document,'script','ga'));
+            ga('create','UA-56383922-1');ga('send','pageview');
+        </script>
+    </body>
+</html>
