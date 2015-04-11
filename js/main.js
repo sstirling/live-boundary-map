@@ -30,7 +30,7 @@
         REFRESH_DELAY = 0, // Delay in seconds between checks for data. 0 to disable.
 
         TOOLTIP_DESCRIPTION = function (vtd) {
-            return 'Ward ' + vtd.ward;
+            return 'Original Section ' + vtd.ward;
         },
 
         AVAILABLE_FILTERS = {
